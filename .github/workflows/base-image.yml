@@ -1,11 +1,16 @@
-name: Docker image
+name: Base image
 
 on:
   push:
     branches: [main]
-    tags: ["v*"]
+    paths:
+      - Dockerfile.base
+      - .github/workflows/base-image.yml
   pull_request:
     branches: [main]
+    paths:
+      - Dockerfile.base
+      - .github/workflows/base-image.yml
   workflow_dispatch:
 
 permissions:
@@ -13,15 +18,17 @@ permissions:
   packages: write
 
 concurrency:
-  group: docker-${{ github.ref }}
+  group: base-image-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository }}
+  IMAGE_NAME: ghcr.io/${{ github.repository }}-base
+  BASE_TAG: rocm7.2.3-ct2v4.7.1-gfx1100
+  CACHE_IMAGE: ghcr.io/${{ github.repository }}-base:buildcache
 
 jobs:
   build:
-    name: Build${{ github.event_name != 'pull_request' && ' and publish' || '' }} image
+    name: Build${{ github.event_name != 'pull_request' && ' and publish' || '' }} base
     runs-on: ubuntu-24.04
 
     steps:
@@ -47,23 +54,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=sha,prefix=sha-
-            type=ref,event=tag
-
-      - name: Build and publish image
+      - name: Build and publish base image
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: Dockerfile.base
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.BASE_TAG }}
+            ${{ env.IMAGE_NAME }}:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.description=ROCm CTranslate2 base image for whisper-rocm-ct2
           build-args: |
             ROCM_ARCHS=gfx1100
+          cache-from: type=registry,ref=${{ env.CACHE_IMAGE }}
+          cache-to: ${{ github.event_name != 'pull_request' && format('type=registry,ref={0},mode=max', env.CACHE_IMAGE) || '' }}
           provenance: false

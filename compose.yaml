@@ -1,0 +1,21 @@
+services:
+  whisper-rocm-ct2:
+    image: ghcr.io/marnunez/whisper-rocm-ct2:latest
+    container_name: whisper-rocm-ct2
+    ports:
+      - "8080:8080"
+    environment:
+      - HSA_OVERRIDE_GFX_VERSION=11.0.0
+      - WHISPER_MODEL=large-v3-turbo
+      - WHISPER_DEVICE=cuda
+      - WHISPER_COMPUTE_TYPE=float16
+      - HF_HOME=/root/.cache/huggingface
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    security_opt:
+      - seccomp=unconfined
+    volumes:
+      - whisper-cache:/root/.cache/huggingface
+volumes:
+  whisper-cache:

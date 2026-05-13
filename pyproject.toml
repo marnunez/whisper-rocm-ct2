@@ -1,0 +1,23 @@
+[project]
+name = "whisper-rocm-ct2"
+version = "0.1.0"
+description = "OpenAI-compatible Whisper server for AMD ROCm using CTranslate2/faster-whisper"
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi>=0.111",
+  "uvicorn[standard]>=0.29",
+  "python-multipart>=0.0.9",
+  "soundfile>=0.12",
+  "numpy>=1.24",
+  "faster-whisper>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["ruff", "pytest", "httpx"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

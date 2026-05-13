@@ -122,19 +122,33 @@ volumes:
 
 ## Build and publish
 
-GitHub Actions builds and publishes the public image to GHCR on pushes to `main` using GitHub's built-in `GITHUB_TOKEN`; no personal access token is needed.
+GitHub Actions builds and publishes public images to GHCR using GitHub's built-in `GITHUB_TOKEN`; no personal access token is needed.
 
-The Dockerfile builds upstream CTranslate2 `v4.7.1` from `OpenNMT/CTranslate2` against `rocm/dev-ubuntu-24.04:7.2.3`. This is expected to be slow and storage-hungry.
+There are two images:
+
+| Image | Purpose | Rebuild frequency |
+|---|---|---|
+| `ghcr.io/marnunez/whisper-rocm-ct2-base:rocm7.2.3-ct2v4.7.1-gfx1100` | ROCm runtime plus upstream CTranslate2 `v4.7.1` built with HIP | Only when ROCm, CTranslate2, or GPU targets change |
+| `ghcr.io/marnunez/whisper-rocm-ct2:latest` | FastAPI/faster-whisper application layer | On normal app changes |
+
+The base image is slow and storage-hungry because it compiles CTranslate2 from `OpenNMT/CTranslate2` against `rocm/dev-ubuntu-24.04:7.2.3`. The application image is intentionally thin and should rebuild quickly.
 
 To build locally:
 
 ```bash
+# Slow: rebuild the ROCm/CTranslate2 base image.
 docker build \
+  -f Dockerfile.base \
   --build-arg ROCM_ARCHS=gfx1100 \
+  -t whisper-rocm-ct2-base:dev .
+
+# Fast: rebuild only the API/application layer.
+docker build \
+  --build-arg BASE_IMAGE=whisper-rocm-ct2-base:dev \
   -t whisper-rocm-ct2:dev .
 ```
 
-Build arguments:
+Base build arguments:
 
 | Argument | Default | Meaning |
 |---|---|---|

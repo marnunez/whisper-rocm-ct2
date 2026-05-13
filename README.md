@@ -74,9 +74,17 @@ curl http://localhost:8080/v1/audio/transcriptions \
 | `WHISPER_DEVICE` | `cuda` | CTranslate2 device (`cuda` for ROCm HIP build) |
 | `WHISPER_COMPUTE_TYPE` | `float16` | `float16`, `int8_float16`, `int8`, etc. |
 | `WHISPER_LANGUAGE` | empty | Force language, e.g. `en`/`es`; empty = auto |
+| `WHISPER_TASK` | `transcribe` | `transcribe` or `translate` |
 | `WHISPER_BEAM_SIZE` | `5` | Beam size |
+| `WHISPER_BEST_OF` | `5` | Number of candidates for non-zero-temperature sampling |
+| `WHISPER_TEMPERATURE` | `0.0` | Decoding temperature |
 | `WHISPER_VAD_FILTER` | `true` | Enable faster-whisper VAD |
 | `WHISPER_CONDITION_ON_PREVIOUS_TEXT` | `false` | faster-whisper condition-on-previous-text |
+| `WHISPER_NO_SPEECH_THRESHOLD` | `0.6` | Whisper no-speech threshold |
+| `WHISPER_LOG_PROB_THRESHOLD` | `-1.0` | Average log-probability failure threshold |
+| `WHISPER_COMPRESSION_RATIO_THRESHOLD` | `2.4` | Compression-ratio failure threshold |
+| `WHISPER_HALLUCINATION_SILENCE_THRESHOLD` | unset | Optional silence threshold for hallucination suppression |
+| `WHISPER_HOTWORDS` | empty | Optional context/hotwords string |
 | `HOST` | `0.0.0.0` | Uvicorn bind host |
 | `PORT` | `8080` | Uvicorn port |
 
@@ -95,6 +103,10 @@ services:
       - WHISPER_MODEL=large-v3-turbo
       - WHISPER_DEVICE=cuda
       - WHISPER_COMPUTE_TYPE=float16
+      - WHISPER_TASK=transcribe
+      - WHISPER_BEAM_SIZE=5
+      - WHISPER_BEST_OF=5
+      - WHISPER_TEMPERATURE=0.0
       - HF_HOME=/root/.cache/huggingface
     devices:
       - /dev/kfd:/dev/kfd
